@@ -1,0 +1,7 @@
+*.root
+*.mk
+*.o
+dspc
+main
+other_files
+
