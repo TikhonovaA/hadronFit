@@ -393,6 +393,7 @@ void fillparam(char *fname, double paq[][12]){
 	}
 }
 
+
 void lftda_(short int *id, int *pf, int *pf1, int *hf, int *hf1, int *fg41, int *fg43, int *fg45, int *fg51, int *fg52, int *fg53, int *fg54, int *fg55,
           int *y,int *ttrig, int *n16, int *ch,int *mi5,int *p_lar,int *ltr,int *h_lar,int *lq,int *lch3,int *lch4,int *lcp, int *ask, int *yfit, int *dif)
 {
@@ -1003,7 +1004,7 @@ for(int k=0; k<5000; k++){
 	//ts=ts/192.;
 	//std::cout<<ts<<std::endl;
 	double Aset = 5000;//random->Uniform(1000, 100000);
-	double Aset_h = Aset*0.3;//random->Uniform(0, 0.3);
+	double Aset_h = Aset*0.0;//random->Uniform(0, 0.3);
 	Double_t X[31]; //X[i] electronic noise
 	electronic_noise(X, in, random); 
 	
