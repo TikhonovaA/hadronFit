@@ -1,0 +1,1 @@
+void fred_(int *hea,double *f,double *f1,double *ff,double *ff1,double *fg,double *fg2,double *fg5);

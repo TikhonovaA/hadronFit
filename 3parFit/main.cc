@@ -18,181 +18,6 @@
 #include <Eigen/Dense>
 #include "funcCalc.h"
 
-
-/*
-double sv123(const double &t, const double &t01, const double &tb1, const double &t02, 
-		const double &tb2, const double &td1, const double &ts1){
-	//      implicit none
-  double sv123 = 0.;
-
-	double dt01,dtb1,dt02,dtb2,dks0,dks1,dksm;
-	double dw0,dw1,dwp,dwm,das1,dac1,das0,dac0,dzna,dksm2,ds,dd;
-	double dcs0,dsn0,dzn0,td,ts,dr;
-	double  dcs0s,dsn0s,dcs0d,dsn0d,dcs1s,dsn1s,dcs1d,dsn1d;
-
-	double rv=0.0;
-		if(t < 0) return 0;
-
-	dr=(ts1-td1)/td1;
-	//	if(fabs(dr) > 1.0e-5){
-    if (fabs(dr) >= 0.0000001) {
-
-		td=td1;
-		ts=ts1;
-	} else {
-		td=td1;
-		if(ts1>td1)
-			ts=td1*1.00001;
-		else
-			ts=td1*0.99999;
-
-	}
-
-	dr=((t01-t02)*(t01-t02) + (tb1-tb2)*(tb1-tb2)) / ((t01)*(t01) + (tb1)*(tb1));
-	dks0=1.0/t01;
-	dks1=1.0/t02;
-
-	if(dr < 1.0e-10){
-		if(dks0 > dks1)
-			dks0=dks1*1.00001;
-		else
-			dks0=dks1*0.99999;
-	}
-
-	dksm=dks1-dks0;
-
-	ds=1.0/ts;
-	dd=1.0/td;
-
-	dw0=1.0/tb1;
-	dw1=1.0/tb2;
-	dwp=dw0+dw1;
-	dwm=dw1-dw0;
-
-	dksm2=dksm*dksm;
-
-	dzna=(dksm2+dwm*dwm)*(dksm2+dwp*dwp);
-
-
-	das0=dw1*(dksm2+dwp*dwm);
-	dac0=-2*dksm*dw0*dw1;
-	das1=dw0*(dksm2-dwp*dwm);
-	dac1=-dac0;
-
-
-	dsn0=(ds-dks0);
-	dcs0=-dw0;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn0s=(dsn0*das0-dcs0*dac0)/dzn0;
-	dcs0s=(dcs0*das0+dsn0*dac0)/dzn0;
-
-	dsn0=(ds-dks1);
-	dcs0=-dw1;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn1s=(dsn0*das1-dcs0*dac1)/dzn0;
-	dcs1s=(dcs0*das1+dsn0*dac1)/dzn0;
-
-
-	dsn0=(dd-dks0);
-	dcs0=-dw0;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn0d=(dsn0*das0-dcs0*dac0)/dzn0;
-	dcs0d=(dcs0*das0+dsn0*dac0)/dzn0;
-
-	dsn0=(dd-dks1);
-	dcs0=-dw1;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn1d=(dsn0*das1-dcs0*dac1)/dzn0;
-	dcs1d=(dcs0*das1+dsn0*dac1)/dzn0;
-
-	dr=(ts-td)/td;
-
-
-	
-	rv=( ((dsn0s-dsn0d)*sin(dw0*t)	+ (dcs0s-dcs0d)*cos(dw0*t)) 
-	* exp(-t*dks0) - (dcs0s+dcs1s)*exp(-t*ds)+(dcs0d+dcs1d)*exp(-t*dd)
-	+ ((dsn1s-dsn1d)*sin(dw1*t)	+ (dcs1s-dcs1d)*cos(dw1*t))*exp(-t*dks1) )
-	/dzna/(ts-td);
-	
-	
-	rv=rv/(-.109+.919*t01-.261*t01*t01)
-	/(-.109+.919*t02-.261*t02*t02)
-		/(.262+.174*tb1-.208*tb1*tb1)
-		/(.262+.174*tb2-.208*tb2*tb2)
-		/(4.56-1.58*td1)/(1.391-0.434*ts1)
-		/(1.06-0.578*(t01-tb1)*(t01-tb1))
-		/(1.06-0.578*(t02-tb2)*(t02-tb2))
-		/(1.2140-0.79645*t01+0.63440*t01*t01)
-		/(1.2140-0.79645*t02+0.63440*t02*t02);
-	
-	
-	//      type t,sv123,dzna,das0,das1,dac0
-
-	
-
-  //  printf(" t= %lf sv=%e \n",t,sv123);	
-return rv;
-
-}
-
-double sv101(double *xx, double *FITPAD){
-
-	double tr1 = xx[0];
-	//double precision FITPAD(12)
-
-	double FITFUN;
-
-	//      common/norm/ped,amp,ts0,td,t0,b1,t1,amm,tmm,t01,b2,a
-	double ped,amp,ts0,td,t0,b1,t1,amm,tmm,t01,b2,a;
-	double tr,x;
-	double tr2, tr3;
-
-	
-ped = FITPAD[0];
-amp = FITPAD[1];
-ts0 = FITPAD[2];
-td  = FITPAD[3];
-t0  = FITPAD[4];
-b1  = FITPAD[5];
-t1  = FITPAD[6];
-
-amm = FITPAD[7];
-tmm = FITPAD[8];
-
-t01 = FITPAD[9];
-b2  = FITPAD[10];
-a   = FITPAD[11];
-	
-
-
-
-
-	tr=tr1-ts0;
-	tr2=tr+0.2;
-     
-	tr3=tr-0.2;
-
-
-	if(tr2 <= 0) return (ped ); 
-
-		FITFUN=( sv123(tr,t0,b1,t01,b2,td,t1)*(1-a) + 
-				a*0.5*(sv123(tr2,t0,b1,t01,b2,td,t1) + sv123(tr3,t0,b1,t01,b2,td,t1)) );
-			x=tr/t0;
-
-		FITFUN=amp*(FITFUN-amm*(exp(-tr/tmm)*(1-exp(-x)*(1+x+x*x/2+x*x*x/6+x*x*x*x/24+x*x*x*x*x/120))));
-	
-
-	FITFUN = FITFUN + ped;
-
-	return FITFUN;
-}
-
-*/
-
 double *cholesky(double *A, int n) {
     double *L = (double*)calloc(n * n, sizeof(double));
     if (L == NULL)
@@ -349,7 +174,6 @@ void fillparam(char *fname, double paq[][12]){
 
 	while(!feof(PR)){
 		fscanf (PR, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf    ", &u,&c0,&c1,&c2,&c3,&c4,&c5,&c6,&c7,&c8,&c9);
-	//	printf ("%d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf \n   ",u,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
 		if(u>0){
 		      Cs[0][u-1]=c0;
 		      Cs[1][u-1]=c1;
@@ -372,23 +196,8 @@ void fillparam(char *fname, double paq[][12]){
 
 	for(ih=Chst;ih<=Ched;ih++){  
 
-	//	printf("ih=%d \n ",ih);
-
 		paq[ih-1][0]  = -0.000; 
 		paq[ih-1][1]  = 1.00; 
-		//paq[2]  = ((double)poq/72.)-1.-2.07;
-	/*	paq[ih-1][2]  = 0.0;
-		paq[ih-1][3]  = Cs[1][ih-1]; 
-		paq[ih-1][4]  = Cs[2][ih-1]; 
-		paq[ih-1][5]  = Cs[3][ih-1]; 
-		paq[ih-1][6]  = Cs[4][ih-1]; 
-		paq[ih-1][7]  = Cs[5][ih-1]; 
-		paq[ih-1][8]  = Cs[6][ih-1]; 
-		paq[ih-1][9]  = Cs[7][ih-1]; 
-		paq[ih-1][10] = Cs[8][ih-1]; 
-		paq[ih-1][11] = 0; 
-*/
-
 		paq[ih-1][2]  = 0.75;
 		paq[ih-1][3]  = 0.648324; 
 		paq[ih-1][4]  = 0.401711; 
@@ -460,8 +269,6 @@ void lftda_(short int *id,short int *f,short int *f1,short int *fg41,short int *
   int validity_code=0;
   for(i=0, z0=0; i<16; i++)
     z0 += y[i];
-
-  //printf("z0 = %lld\n", z0);
 
   //initial time index
   it0 = 48 + ((23-*ttrig)<<2);
@@ -682,7 +489,7 @@ int main(){
 double paq[16][12];
 char in[256];
 strcpy(in, std::getenv("HOME"));
-strcat(in, "/fit/1fit/panr_11.dat");
+strcat(in, "/fit/3parFit/panr_11.dat");
 
 //fillparam(in, paq);
 
@@ -793,7 +600,7 @@ FILE *fr;
 int h,nsiz,nsiz1;
 char fname[256];
 strcpy(fname, std::getenv("HOME"));
-strcat(fname, "/fit/1fit/DSP_exp10/dsp.dat");
+strcat(fname, "/fit/3parFit/DSP_exp10/dsp.dat");
 
 short int id[256];
 short int cf[192][16];
@@ -927,13 +734,13 @@ double mean = 0;
 //double Aset = 200;
 
 for(int k=0; k<5000; k++){
-	double ts = random->Uniform(-0.9, 0);
+	double ts = random->Uniform(-0.75, -0.26);
+	double lvl = 0.0;//random->Uniform(0, 0.3);;
 	double Aset = random->Uniform(200, 20000);
-	double Aset_h = Aset*random->Uniform(0, 0.3);
+	double Aset_h = Aset*lvl;
+	Aset = Aset*(1-lvl);
 	Double_t X[31];
 	electronic_noise(X, in, random);
-//	double ts =0;
-	//double Aset = 2000;
 
 	//TGraph *pilegph = new TGraph(31);
 	double y31[31];                                  //array for lftda func
@@ -945,7 +752,7 @@ for(int k=0; k<5000; k++){
 		Fk = X[(int)i] + F;
 		//h1->Fill(Fk);
 		//std::cout<<X[(int)i]<<std::endl;
-		Ffulk = Fk + Aset*fitfun3->Eval(t-ts) +Aset_h*fitfun1->Eval(t-ts);// +Pset;
+		Ffulk = Fk + Aset*fitfun3->Eval(t-ts) + Aset_h*fitfun1->Eval(t-ts);// +Pset;
 		//pilegph->SetPoint((int)i, t, Ffulk);
 		y31[(int)i]=Ffulk;
 		mywaveform.time[(int)i] = t;

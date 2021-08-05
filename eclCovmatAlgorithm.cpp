@@ -39,7 +39,7 @@ void eclCovmatAlgorithm::calibrate()
   char in[256];
   FILE *PR;
   strcpy(in, std::getenv("HOME"));
-	strcat(in, "/fit/matr31.dat");
+	strcat(in, "/fit/newmatr31.dat");
   PR = fopen(in, "r");
 
   if ( PR == NULL){

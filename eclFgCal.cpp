@@ -18,6 +18,7 @@
 //#include "TDirectoryFile.h"
 #include <Eigen/Dense>
 #include "funcCalc.h"
+#include "fred.h"
 
 using namespace std;
 
@@ -475,6 +476,27 @@ double eclFgCal::ShaperDSP(double Ti)
 */
 
 void eclFgCal::CalculateFgpar( ){
+
+  int hea[2];
+  double f[192][31]; //photon function
+  double ff[192][31]; // -hadron function
+  double f1[192][31]; // -deriv. photon function
+  double ff1[192][31]; // -deriv. hadron function
+  double fg[3][192][31]; // -coeff for 3-fit
+//  0 -ampl
+//  1 -time
+//  2 -ped
+  double fg2[2][24][31]; // -coeff for 3-fit
+//  0 -amp
+//  1 -ped
+  double fg5[5][192][31]; // -coeff for 5-fit
+//  0 -ampl phot
+//  1 -time phot
+//  2 -ped
+//  3 -ampl hadr
+//  4 -time hadr
+
+  fred_(hea, f[0], f1[0], ff[0], ff1[0], fg[0][0], fg2[0][0], fg5[0][0]);
 
   double dt;
   double ts0;
@@ -1361,7 +1383,7 @@ void eclFgCal::CalculateFginInt( ){
       const double isd = 3. / 4., sd = 1 / isd ; // conversion factor (???) 
       
      // long long int sum =0;
-     // double dsum =0;
+      //double dsum =0;
    // if(ChN==15)  printf("%4d",k);
       for (int i = 0; i < 16; i++) {
 	double w = i ? 1.0 : 1. / 16.;
@@ -1385,10 +1407,10 @@ void eclFgCal::CalculateFginInt( ){
 	m_fg54[ChN][k][i] = lrint(fg54[ChN][k][i] * id * w * isd);
 	m_fg55[ChN][k][i] = lrint(fg55[ChN][k][i] * ie * w);
 
- // long long int f52=m_fg52[ChN][k][i];
-  //if(i==0) f52=f52<<4;
+  /*long long int f51=m_fg51[ChN][k][i];
+  if(i==0) f51=f51<<4;
 
-  //sum+=	f52*m_pf[ChN][k][i]*1000;
+  sum+=	f51*m_pf[ChN][k][i];*/
   //dsum+=	fg52[ChN][k][i]*p_f[ChN][k][i];//*h_f[ChN][k][i];
 	
   //printf("%d, %d  %d, %d, %d\n", 	m_fg51[ChN][k][i], 	m_fg52[ChN][k][i],	m_fg53[ChN][k][i],	m_fg54[ChN][k][i],	m_fg55[ChN][k][i]);
@@ -1416,12 +1438,13 @@ void eclFgCal::CalculateFginInt( ){
 
   }
 
- 
-//	sum=sum/ib;
-  //double ddsum=sum;
-  //ddsum=ddsum/iff;
-  //printf("%lf %lf \n", ddsum, dsum);
-
+/*  std::cout<<sum/ia/iff<<std::endl;
+  std::cout<<sum*1000/ia/iff<<std::endl;
+	sum=sum/ia;
+  double ddsum=sum;
+  ddsum=ddsum/iff;
+  printf("%lf %lf \n", ddsum, dsum);
+*/
 
 	
 	int jk = 23 + ((48 - k ) >> 2);

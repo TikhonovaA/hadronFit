@@ -39,7 +39,7 @@ void eclCovmatAlgorithm::calibrate()
   char in[256];
   FILE *PR;
   strcpy(in, std::getenv("HOME"));
-	strcat(in, "/fit/1fit/matr31.dat");
+	strcat(in, "/fit/3parFit/newmatr31.dat");
   PR = fopen(in, "r");
 
   if ( PR == NULL){
@@ -127,13 +127,13 @@ void eclCovmatAlgorithm::calibrate()
 
 	  char invmat_dir_name[200];
     strcpy(invmat_dir_name, std::getenv("HOME"));
-	  strcat(invmat_dir_name, "/fit/1fit/invmat");
+	  strcat(invmat_dir_name, "/fit/3parFit/invmat");
 	  printf("SaveInverseMatrices\n");
 	  fg->SaveInverseMatrices(invmat_dir_name);
 
 	  char fname[200];
     strcpy(fname, std::getenv("HOME"));
-	  strcat(fname, "/fit/1fit/panr_11.dat");
+	  strcat(fname, "/fit/3parFit/panr_11.dat");
 	  printf("GetResponsePar for fname=%s\n",fname);
 	  fg->GetResponsePar(fname); 
 	  printf("CalculateFgPar\n");
@@ -147,7 +147,7 @@ void eclCovmatAlgorithm::calibrate()
 	  fg->CalculateFginInt();
 	  char dir_name[200];
     strcpy(dir_name, std::getenv("HOME"));
-	  strcat(dir_name, "/fit/1fit/DSP_exp10");
+	  strcat(dir_name, "/fit/3parFit/DSP_exp10");
 	  //sprintf(dir_name,"/home/belle/shtol/belle2/ECL/development/ecl/modules/eclCovmatCollector/DSP_exp10/%d",crate);
 	  
 	  //	fg->ReadChiCut(dir_name1);

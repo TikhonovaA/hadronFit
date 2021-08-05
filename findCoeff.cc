@@ -20,13 +20,15 @@
 #include <Eigen/Dense>
 #include "funcCalc.h"
 
-int ttrig;
+double sign(double x)
+{
+    return x<0?-1.0:x==0.0?0.0:-1.0;
+}
 
 
 void minimize(short int *id, int *pf, int *pf1, int *hf, int *hf1, int *fg41, int *fg43, int *fg45, int *fg51, int *fg52, int *fg53, int *fg54, int *fg55,
-        int *ttrig, int *ch, double a/*, double b*/, Double_t *lfunc)
+ int *ch, double a, double b, double c, Double_t *lfunc)
 {
-
 	int A0  = (int)*(id+128+*ch)-128;
 	int Askip  = (int)*(id+192+*ch)-128;
 
@@ -44,77 +46,63 @@ void minimize(short int *id, int *pf, int *pf1, int *hf, int *hf1, int *fg41, in
 	long long int s1,s2,s3,s4,B1, B2;
 
 	int it, it0;
-	double itd, norm; 
-	int it_h, it_l; 
-	int low_ampl,i,T,iter;   
-
+	double itd, norm;   
 	double chi2 = 0;
     double hlvl = 0.0; 
+    for(hlvl =0; hlvl<=1; hlvl+= 0.1){
 
+    for(it0 = 48; it0 < 144; it0++){
+        for(int d = -24; d <= 24; d++){
+            long long int v51,v52,v53,v54,  h51,h52,h53,h54;
+            double w1,w2,w3,w4;
+            v51=v52=v53=v54=h51=h52=h53=h54=0;
 
-	it0 = 48 + ((143-*ttrig)*2/3);
+            it = it0+d;
+            
+            for(int j=0; j<16; j++){
+                s1=(*(fg51+it*16+j));
+                s2=(*(fg52+it*16+j));
+                s3=(*(fg53+it*16+j));
+                s4=(*(fg54+it*16+j));
 
-	//printf(" it0 = %d\n", it0);
+                B1 = (*(pf+it0*16+j));
+                B2 = s1*B1;
+                v51 += B2;
 
-	//limits
-	it_h=191;
-	it_l=0;
+                B2 = s2*B1;
+                v52 += B2;
 
-	if (it0 < it_l)it0=it_l; 
-	if (it0 > it_h)it0=it_h; 
+                B2 = s3*B1;
+                v53 += B2;
 
-    for(int d = -48; d <= 48; d++){
-        long long int v51,v52,v53,v54,  h51,h52,h53,h54;
-        double w1,w2,w3,w4;
-        v51=v52=v53=v54=h51=h52=h53=h54=0;
+                B2 = s4*B1;
+                v54 += B2;
 
-        it = it0+d;
-        
-        for(int j=0; j<16; j++){
-            s1=(*(fg51+it*16+j));
-		    s2=(*(fg52+it*16+j));
-		    s3=(*(fg53+it*16+j));
-		    s4=(*(fg54+it*16+j));
+                B1 = (*(hf+it0*16+j));
+                B2 = s1*B1;
+                h51 += B2;
 
-            B1 = (*(pf+it0*16+j));
-            B2 = s1*B1;
-            v51 += B2;
+                B2 = s2*B1;
+                h52 += B2;
 
-            B2 = s2*B1;
-            v52 += B2;
+                B2 = s3*B1;
+                h53 += B2;
 
-            B2 = s3*B1;
-            v53 += B2;
+                B2 = s4*B1;
+                h54 += B2;
+            }
 
-            B2 = s4*B1;
-            v54 += B2;
+            w1 = ( (1-hlvl) * (double)v51 + hlvl* (double)h51 ) / pow(2,30+k_a);
+            w2 = ( (1-hlvl) * (double)v52 + hlvl* (double)h52 ) / pow(2,30+k_b);
+            w3 = ( (1-hlvl) * (double)v53 + hlvl* (double)h53 ) / pow(2,30+k_c);
+            w4 = ( (1-hlvl) * (double)v54 + hlvl* (double)h54 ) / pow(2,30+k_d);
 
-            B1 = (*(hf+it0*16+j));
-            B2 = s1*B1;
-            h51 += B2;
-
-            B2 = s2*B1;
-            h52 += B2;
-
-            B2 = s3*B1;
-            h53 += B2;
-
-            B2 = s4*B1;
-            h54 += B2;
+            chi2 += pow( ((double)(it - it0)/256 + (w2 + a*w4)/(b*w1 + c*w3)), 2 );
         }
-
-        w1 = ( (1-hlvl) * (double)v51 + hlvl* (double)h51 ) / pow(2,30+k_a);
-        w2 = ( (1-hlvl) * (double)v52 + hlvl* (double)h52 ) / pow(2,30+k_b);
-        w3 = ( (1-hlvl) * (double)v53 + hlvl* (double)h53 ) / pow(2,30+k_c);
-        w4 = ( (1-hlvl) * (double)v54 + hlvl* (double)h54 ) / pow(2,30+k_d);
-
-        chi2 += ( (double)(it - it0)/256 - (w2 + a*w4)/(w1 + w3) ) * ( (double)(it - it0)/256 - (w2 + a*w4)/(w1 + w3) );
+    }
     }
 
     *lfunc = chi2;
-
-   // printf("chi2=%lf\n", chi2);
-	
 }
 
 
@@ -283,7 +271,7 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 
     Double_t lfunc;
 
-    minimize(id, cpf[0], cpf1[0], chf[0], chf1[0], cfg41[0], cfg43[0], cfg45[0], cfg51[0], cfg52[0], cfg53[0], cfg54[0], cfg55[0], &ttrig, &chan, par[0], &lfunc);
+    minimize(id, cpf[0], cpf1[0], chf[0], chf1[0], cfg41[0], cfg43[0], cfg45[0], cfg51[0], cfg52[0], cfg53[0], cfg54[0], cfg55[0], &chan, par[0], par[1], par[2], &lfunc);
     
     f = lfunc;
 }
@@ -292,58 +280,34 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 int findCoeff(){
 
     gSystem->Load("libMinuit");
-    const int npar = 1;
+    const int npar = 3;
 
-    double results[96][3];
-    for(int t=48; t<144; t++){
-        double ts = (3./2. * (48-(double)t) - 75) / 288.;
-        printf("ts = %lf\n", ts);
-        ttrig = 218+288*ts;  //129+288*ts; //trigger time
+    TMinuit *gMinuit = new TMinuit(npar);  
+    gMinuit->SetFCN(fcn);
 
-        TMinuit *gMinuit = new TMinuit(npar);  
-        gMinuit->SetFCN(fcn);
+    Double_t arglist[10];
+    Int_t ierflg = 0;
 
-        Double_t arglist[10];
-        Int_t ierflg = 0;
+    arglist[0] = 0.5;
+    gMinuit->mnexcm("SET ERR", arglist ,1,ierflg);
 
-        arglist[0] = 0.5;
-        gMinuit->mnexcm("SET ERR", arglist ,1,ierflg);
+    // Set starting values and step sizes for parameters		
+    const Double_t vstart[npar] = {1,1,1};
+    const Double_t step[npar] =   {0.001, 0.001, 0.001};
 
-        // Set starting values and step sizes for parameters		
-        const Double_t vstart[npar] = {1};
-        const Double_t step[npar] =   {0.001};
+    gMinuit->mnparm(0, "a", vstart[0], step[0], 0,0,ierflg);
+    gMinuit->mnparm(1, "b", vstart[1], step[1], 0,0,ierflg);
+    gMinuit->mnparm(2, "c", vstart[2], step[2], 0,0,ierflg);
 
-        gMinuit->mnparm(0, "a", vstart[0], step[0], 0,0,ierflg);
-       // gMinuit->mnparm(1, "b", vstart[1], step[1], 0,0,ierflg);
-       // gMinuit->mnparm(2, "c", vstart[2], step[2], 0,0,ierflg);
+    arglist[0] = 500;
+    arglist[1] = 1.;
+    gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
 
-        arglist[0] = 500;
-        arglist[1] = 1.;
-        gMinuit->mnexcm("MIGRAD", arglist ,2,ierflg);
-
-        Double_t pval[npar], err[npar];
-        for(int i=0; i<npar; i++ ) {
-            gMinuit->GetParameter(i, pval[i], err[i]);
-        }
-
-        results[t-48][0] = t;
-        results[t-48][1] = pval[0];
-        results[t-48][2] = err[0];
-
-       // results[t-48][3] = pval[1];
-       // results[t-48][4] = err[1];
-
-       // results[t-48][5] = pval[2];
-       // results[t-48][6] = err[2];
-
+    Double_t pval[npar], err[npar];
+    for(int i=0; i<npar; i++ ) {
+        gMinuit->GetParameter(i, pval[i], err[i]);
     }
-
-
-    for(int i =0; i<96; i++){
-        printf("%lf, %lf +- %lf\n", results[i][0], results[i][1], results[i][2]);
       
-    }
-
     return 0;
 
 }

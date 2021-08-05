@@ -18,173 +18,6 @@
 #include <Eigen/Dense>
 #include "funcCalc.h"
 
-/*
-
-double sv123(const double &t, const double &t01, const double &tb1, const double &t02, 
-		const double &tb2, const double &td1, const double &ts1){
-	//      implicit none
-  double sv123 = 0.;
-
-	double dt01,dtb1,dt02,dtb2,dks0,dks1,dksm;
-	double dw0,dw1,dwp,dwm,das1,dac1,das0,dac0,dzna,dksm2,ds,dd;
-	double dcs0,dsn0,dzn0,td,ts,dr;
-	double  dcs0s,dsn0s,dcs0d,dsn0d,dcs1s,dsn1s,dcs1d,dsn1d;
-
-	double rv=0.0;
-		if(t < 0) return 0;
-
-	dr=(ts1-td1)/td1;
-	//	if(fabs(dr) > 1.0e-5){
-    if (fabs(dr) >= 0.0000001) {
-
-		td=td1;
-		ts=ts1;
-	} else {
-		td=td1;
-		if(ts1>td1)
-			ts=td1*1.00001;
-		else
-			ts=td1*0.99999;
-
-	}
-
-	dr=((t01-t02)*(t01-t02) + (tb1-tb2)*(tb1-tb2)) / ((t01)*(t01) + (tb1)*(tb1));
-	dks0=1.0/t01;
-	dks1=1.0/t02;
-
-	if(dr < 1.0e-10){
-		if(dks0 > dks1)
-			dks0=dks1*1.00001;
-		else
-			dks0=dks1*0.99999;
-	}
-
-	dksm=dks1-dks0;
-
-	ds=1.0/ts;
-	dd=1.0/td;
-
-	dw0=1.0/tb1;
-	dw1=1.0/tb2;
-	dwp=dw0+dw1;
-	dwm=dw1-dw0;
-
-	dksm2=dksm*dksm;
-
-	dzna=(dksm2+dwm*dwm)*(dksm2+dwp*dwp);
-
-
-	das0=dw1*(dksm2+dwp*dwm);
-	dac0=-2*dksm*dw0*dw1;
-	das1=dw0*(dksm2-dwp*dwm);
-	dac1=-dac0;
-
-
-	dsn0=(ds-dks0);
-	dcs0=-dw0;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn0s=(dsn0*das0-dcs0*dac0)/dzn0;
-	dcs0s=(dcs0*das0+dsn0*dac0)/dzn0;
-
-	dsn0=(ds-dks1);
-	dcs0=-dw1;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn1s=(dsn0*das1-dcs0*dac1)/dzn0;
-	dcs1s=(dcs0*das1+dsn0*dac1)/dzn0;
-
-
-	dsn0=(dd-dks0);
-	dcs0=-dw0;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn0d=(dsn0*das0-dcs0*dac0)/dzn0;
-	dcs0d=(dcs0*das0+dsn0*dac0)/dzn0;
-
-	dsn0=(dd-dks1);
-	dcs0=-dw1;
-	dzn0=dcs0*dcs0+dsn0*dsn0;
-
-	dsn1d=(dsn0*das1-dcs0*dac1)/dzn0;
-	dcs1d=(dcs0*das1+dsn0*dac1)/dzn0;
-
-	dr=(ts-td)/td;
-
-
-	
-	rv=( ((dsn0s-dsn0d)*sin(dw0*t)	+ (dcs0s-dcs0d)*cos(dw0*t)) 
-	* exp(-t*dks0) - (dcs0s+dcs1s)*exp(-t*ds)+(dcs0d+dcs1d)*exp(-t*dd)
-	+ ((dsn1s-dsn1d)*sin(dw1*t)	+ (dcs1s-dcs1d)*cos(dw1*t))*exp(-t*dks1) )
-	/dzna/(ts-td);
-	
-	
-	rv=rv/(-.109+.919*t01-.261*t01*t01)
-	/(-.109+.919*t02-.261*t02*t02)
-		/(.262+.174*tb1-.208*tb1*tb1)
-		/(.262+.174*tb2-.208*tb2*tb2)
-		/(4.56-1.58*td1)/(1.391-0.434*ts1)
-		/(1.06-0.578*(t01-tb1)*(t01-tb1))
-		/(1.06-0.578*(t02-tb2)*(t02-tb2))
-		/(1.2140-0.79645*t01+0.63440*t01*t01)
-		/(1.2140-0.79645*t02+0.63440*t02*t02);
-	
-	
-return rv;
-
-}
-
-double sv101(double *xx, double *FITPAD){
-
-	double tr1 = xx[0];
-	//double precision FITPAD(12)
-
-	double FITFUN;
-
-	//      common/norm/ped,amp,ts0,td,t0,b1,t1,amm,tmm,t01,b2,a
-	double ped,amp,ts0,td,t0,b1,t1,amm,tmm,t01,b2,a;
-	double tr,x;
-	double tr2, tr3;
-
-	
-ped = FITPAD[0];
-amp = FITPAD[1];
-ts0 = FITPAD[2];
-td  = FITPAD[3];
-t0  = FITPAD[4];
-b1  = FITPAD[5];
-t1  = FITPAD[6];
-
-amm = FITPAD[7];
-tmm = FITPAD[8];
-
-t01 = FITPAD[9];
-b2  = FITPAD[10];
-a   = FITPAD[11];
-
-
-	tr=tr1-ts0;
-	tr2=tr+0.2;
- 
-	tr3=tr-0.2;
-
-
-	if(tr2 <= 0) return (ped ); 
-
-		FITFUN=( sv123(tr,t0,b1,t01,b2,td,t1)*(1-a) + 
-				a*0.5*(sv123(tr2,t0,b1,t01,b2,td,t1) + sv123(tr3,t0,b1,t01,b2,td,t1)) );
-			x=tr/t0;
-
-		FITFUN=amp*(FITFUN-amm*(exp(-tr/tmm)*(1-exp(-x)*(1+x+x*x/2+x*x*x/6+x*x*x*x/24+x*x*x*x*x/120))));
-	
-
-	FITFUN = FITFUN + ped;
-
-	return FITFUN;
-}
-
-
-*/
 double *cholesky(double *A, int n) {
     double *L = (double*)calloc(n * n, sizeof(double));
     if (L == NULL)
@@ -209,7 +42,7 @@ double *cholesky(double *A, int n) {
 void show_matrix(double *A, int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++)
-            printf("%2.5f ", A[i * n + j]);
+            printf("%15.10f ", A[i * n + j]);
         printf("\n");
     }
 }
@@ -446,25 +279,31 @@ void lftda_(short int *id, int *pf, int *pf1, int *hf, int *hf1, int *fg41, int 
     {
       printf("disagreement in number of the points %d %d \n",k_16,*n16);
     }
-
+/*
+	TCanvas *mlpa_canvas = new TCanvas("mlpa_canvas","",1000,700);
+	TGraph *pilegph = new TGraph(3072);
+	TGraph *pilegph1 = new TGraph(3072);
+	for(int k=0; k<16; k++){
+		for(int j=0; j<192; j++){
+			pilegph->SetPoint((int)k*192+j, k*192+j, *(pf+j*16+k)/pow(2,30));
+			pilegph1->SetPoint((int)k*192+j, k*192+j, *(hf+j*16+k)/pow(2,30));
+		}
+	}
+	//pilegph->SetMarkerStyle(16);
+	pilegph->SetLineColor(kBlue);
+	pilegph->Draw();
+	pilegph1->SetLineColor(kRed);
+	pilegph1->Draw("same");*/
 
   int validity_code=0;
   for(i=0, z0=0; i<16; i++)
     z0 += y[i];
 
- /* printf("ttrig = %d\n", *ttrig);
+ // printf("ttrig = %d\n", *ttrig);
 
-	TCanvas *mlpa_canvas = new TCanvas("mlpa_canvas","",1000,700);
-	TGraph *handp = new TGraph(192);
-	TGraph *hComp = new TGraph(192);
-	TGraph *pComp = new TGraph(192);*/
-
-
- // for(int  d =-10; d<=10; d++){
-	 // std::cout<<"-----------------------------------"<<std::endl;
 	it0 = 48 + ((143-*ttrig)*2/3);//+d;
 
-//	printf(" it0 = %d\n", it0);
+	printf(" it0 = %d\n", it0);
 
   //limits
   it_h=191;
@@ -506,7 +345,8 @@ void lftda_(short int *id, int *pf, int *pf1, int *hf, int *hf1, int *fg41, int 
   A4 += (1<<(k_c-1));
   A4 >>= k_c;
 
-
+printf("Ap=%lld\n", A3);
+printf("Ah=%lld\n", A4);
   s1 = (*(fg45+ttrig0*16));
   C1=s1*z0;
 
@@ -523,14 +363,12 @@ C1 >>= k_e;
 for(iter=0, it=it0; iter<3;){
     iter++;
 
-
 	s1=(*(fg51+it*16));
 	s2=(*(fg53+it*16));
 	s3=(*(fg52+it*16));
 	s4=(*(fg54+it*16));
 	//printf("%4d, ", it);
 	
-
 	A1 = (s1 * z0);
 	A2 = (s2 * z0);
 	B1 = (s3 * z0);
@@ -543,8 +381,12 @@ for(iter=0, it=it0; iter<3;){
 		s4=(*(fg54+it*16+i));
 
 		B3 = y[15+i];
+		//std::cout<<"y="<<B3<<std::endl;
+		//std::cout<<"s1="<<(s1>>k_a)<<std::endl;
 		B3 = s1 * B3;
+		//std::cout<<"s1*y="<<(B3>>k_a)<<std::endl;
 		A1 += B3;
+		//std::cout<<"A="<<(A1>>k_a)<<std::endl;
 
 		B3 = y[15+i];
 		B3 = s2 * B3;
@@ -557,7 +399,6 @@ for(iter=0, it=it0; iter<3;){
 		B3=y[15+i];
         B3= s4 * B3;
         B6 += B3;
-		
 	}
 
 	A1 += (1<<(k_a-1));
@@ -565,6 +406,9 @@ for(iter=0, it=it0; iter<3;){
 
 	A2 += (1<<(k_c-1));
 	A2 = A2>>k_c;
+
+	printf("Ap=%lld\n", A1);
+	printf("Ah=%lld\n", A2);
 
 	if(iter != 3){
 		//printf("iter=%d \n",iter);
@@ -581,14 +425,13 @@ for(iter=0, it=it0; iter<3;){
 			B3h=(B2h/A2);
 			B3h=((B3h+1)>>1)-256;
 		}
-		//std::cout<<"p_A="<<A1<<", p_t="<< B3<<std::endl;
-		//std::cout<<"h_A="<<A2<<", h_t="<<B3h<<std::endl;
 	
 		itd = (double) (B3*A1 + 1.3*B3h*A2);
-		norm = (double) (A1 + A2);
+		norm = (double) (1.3*A1 + 1.2*A2);
 		itd = itd / norm;
-	
+		
 		B3=itd;
+		
 		it += B3;
 	
         it = it>it_h ? it_h : it;
@@ -614,7 +457,7 @@ for(iter=0, it=it0; iter<3;){
 		}
 		else B3h=0;
 		itd = (double) (B3*A1 + 1.3*B3h*A2);
-		norm = (double) (A1 + A2);
+		norm = (double) (1.3*A1 + 1.2*A2);
 		itd = itd / norm;
 	
 		B3=itd;
@@ -623,15 +466,11 @@ for(iter=0, it=it0; iter<3;){
         T = T < 0 ? 0 : T;
 
         B1=B5>>9;
-		//hComp->SetPoint(it, it, B1);
-		//printf("B=%lld, ", B1);
+	
         B5 += (A1<<9);
         B3=(B5/A1);
 		B3=((B3+1)>>1)-256;
-		//printf("A=%lld, 256*B/A=%lld, ", A1, B3);
-		//pComp->SetPoint(it, it, A1);
-		//handp->SetPoint(it, it, B3<<8);
-		//printf("dt=%lld\n", B3);
+		
 
 		B6=B5h>>9;
         B5h += (A2<<9);
@@ -642,15 +481,14 @@ for(iter=0, it=it0; iter<3;){
 		else B3h=0;
 		
 		itd = (double) (B3*A1 + 1.3*B3h*A2);
-		norm = (double) (A1 + A2);
+		norm = (double) (1.3*A1 + 1.2*A2);
 		itd = itd / norm;
 		
 		B3=itd;
-		//printf("dt=%lld\n", B3);
-		//handp->SetPoint(it, it, B3);
+		//std::cout<<it<<"  "<<B3<<std::endl;
 
 		*dif=B3;
-
+		
         it +=B3;
 		//printf("dt=%lld, it=%d\n", B3, it);
         it = it>it_h ? it_h : it; 
@@ -669,23 +507,15 @@ for(iter=0, it=it0; iter<3;){
 		C1 >>= k_e;
     }
 }
+printf("Ap=%lld\n", A1);
+printf("Ah=%lld\n", A2);
+printf("mi5=%d\n", it);
+printf("dif=%d\n", *dif);
 
-/*handp->Draw();
-hComp->SetLineColor(kRed);
-hComp->Draw("same");
-pComp->SetLineColor(kBlue);
-pComp->Draw("same");
-
-TLegend *legend = new TLegend(.75, .80, .95, .95); 
-legend->AddEntry(handp, "B/A * 2^16");
-legend->AddEntry(hComp, "B");
-legend->AddEntry(pComp, "A");
-legend->Draw();
-*/
 	ou:
 	*mi5=it;
-	*p_lar=A1;
-	*h_lar=A2;
+	*p_lar=A3;
+	*h_lar=A4;
 	*ltr=T;
 
 	int ss=(y[20]+y[21]);
@@ -704,7 +534,55 @@ legend->Draw();
 }
 
 
+void newmatr31(double *vector, int N){
 
+	double mean_vector[31];
+	double mymatr31[31][31];
+
+	for(int i = 0; i<31;i++){
+		mean_vector[i]=0;
+		for(int j =0; j<31; j++)
+			mymatr31[i][j]=0;
+	}
+
+
+	for(int i = 0; i < 31; i++){
+		for(int n = 0; n < N; n++)
+			mean_vector[i] += *(vector + n*31 + i);
+		mean_vector[i] = mean_vector[i] / (double)N;
+		std::cout<<mean_vector[i]<<std::endl;
+	}
+
+
+	for(int l = 0; l<31; l++){
+		for(int j = 0; j<31; j++){
+			for(int i = 0; i<N; i++){
+				mymatr31[l][j] += (*(vector+i*31+l) - mean_vector[l]) * (*(vector+i*31+j) - mean_vector[j]);
+			}
+			mymatr31[l][j] = mymatr31[l][j] / ((double)N - 1);
+		}
+	}
+
+	char in[256];
+  	FILE *PR;
+  	strcpy(in, std::getenv("HOME"));
+	strcat(in, "/fit/newmatr31.dat");
+
+	if ( (PR = fopen(in, "w")) == NULL)
+      {
+        fprintf(stderr, "Error opening file %s",in);
+        exit(1);
+      }
+
+	for(int i = 1; i<=31; i++){
+		fprintf(PR, "\t\t%d\n", i); 
+		for(int j =1; j<=31; j++){
+			fprintf(PR, "\t%d \t %.10e \n", j, mymatr31[i-1][j-1]); 
+		}
+	}
+	
+	fclose(PR);
+}
 
 
 int main(){
@@ -769,7 +647,7 @@ int main(){
     MZ[7]=0.791012;
     MZ[8]=0.619416;
     MZ[9]=0.385621;
-    MZ[10]=1;
+    MZ[10]=1.0;
  	spt=0;
  
 	t1[0]=0.;
@@ -962,7 +840,20 @@ for(int i=0;i<=chan;i++){
 
 fclose(fr);
 
-
+/*
+TCanvas *mlpa_canvas = new TCanvas("mlpa_canvas","",1000,700);
+TGraph *pilegph = new TGraph(31);
+TGraph *pilegph1 = new TGraph(31);
+for(double t = 0, i=0; t<16*0.5; t+=0.1,i++){
+	pilegph->SetPoint((int)i, t, photonFun->Eval(t));
+	pilegph1->SetPoint((int)i, t, hadronFun->Eval(t));
+}
+ pilegph->SetMarkerStyle(22);
+pilegph->Draw("APL");
+pilegph->SetLineColor(kRed);
+pilegph1->Draw("same");
+pilegph1->SetLineColor(kBlue);
+*/
 
 //пьедистал 4000
 //18 разрядов
@@ -996,33 +887,27 @@ ftree.Branch("waveform_ampl", &mywaveform, "y[31]/I:time[31]/F:Aset/I:hAset/I:p_
 sprintf(in,"matr31.dat");
 
 //TH1F *h1 = new TH1F("elnoise", "elnoise", 100, -100, 100);
-double mean = 0;
+//double myvector[5000][31];
 
 for(int k=0; k<5000; k++){
-	double ts = random->Uniform(-0.75, -0.26);//*192;
-	//ts = (int)ts;
-	//ts=ts/192.;
-	//std::cout<<ts<<std::endl;
+	double ts = random->Uniform(-0.75, -0.26);
+	double lvl = 0.0;//random->Uniform(0, 0.3);;
 	double Aset = 5000;//random->Uniform(1000, 100000);
-	double Aset_h = Aset*0.0;//random->Uniform(0, 0.3);
+	double Aset_h = Aset*lvl;
+	Aset = Aset*(1-lvl);
 	Double_t X[31]; //X[i] electronic noise
 	electronic_noise(X, in, random); 
-	
-	//double ts = -0.1;
-	//double Aset = 10000;  //amplitude
 
-	//TGraph *pilegph = new TGraph(31);
 	double y31[31];   //31 signal points                              
 	int points = 15;
 	int Pset=2000; //pedestal
 	for(double t = -16*0.5, i=0; t<points*0.5; t+=0.5,i++){
 		F = pile_up_noise(t, photonFun, random, 1.0); //pile-up noise amplitude at i point
-		//std::cout<<fitfun3->Eval(t-ts)<<",   "<<fitfun1->Eval(t-ts)<<std::endl;
 		//pilegph->SetPoint(s-1, t,F);
 		Fk = X[(int)i] + F;  //full noise amplitude
+		//myvector[k][(int)i] = Fk;
 		//h1->Fill(F);
 		Ffulk = Fk + Aset*photonFun->Eval(t-ts) + Aset_h*hadronFun->Eval(t-ts);//+Pset;
-		//pilegph->SetPoint((int)i, t, Ffulk);
 		y31[(int)i]=Ffulk;
 		mywaveform.time[(int)i] = t;
 	}
@@ -1084,6 +969,8 @@ for(int k=0; k<5000; k++){
 	ftree.Fill();
 }
 
+//newmatr31(myvector[0], 5000);
+
 TFile fout("output1.root","recreate");
 tree.Write();
 fout.Close();
@@ -1094,3 +981,4 @@ fout_ed.Close();
 
 //h1->Draw();
 }
+
